@@ -1,0 +1,1411 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Space 2.0 - Официальный Флагманский Релиз</title>
+
+    <!-- Скрипт библиотеки Lordicon -->
+    <script src="https://cdn.lordicon.com/lordicon.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #030712;
+            --glass-bg: linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.008) 100%);
+            --glass-card-bg: rgba(6, 11, 25, 0.22);
+            --glass-border: rgba(255, 255, 255, 0.09);
+            --glass-border-top: rgba(255, 255, 255, 0.22);
+            --accent-cyan: #38bdf8;
+            --accent-purple: #a855f7;
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.65;
+            overflow-x: hidden;
+            padding-bottom: 60px;
+        }
+
+        #space-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .splash-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 99998;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            background: rgba(3, 7, 18, 0.4);
+            backdrop-filter: blur(8px);
+            transition: opacity 1s cubic-bezier(0.4, 0, 0.2, 1), visibility 1s;
+        }
+
+        .splash-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            max-width: 520px;
+        }
+
+        .splash-logo-container {
+            width: 240px;
+            height: 240px;
+            margin-bottom: 28px;
+            position: relative;
+            transform-origin: center center;
+            transition: transform 1.2s cubic-bezier(0.7, 0, 0.84, 0), filter 1s, opacity 1s;
+            filter: drop-shadow(0 0 25px rgba(56, 189, 248, 0.3));
+            cursor: pointer;
+        }
+
+        .splash-logo-img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .splash-info-text {
+            font-size: 1.2rem;
+            font-weight: 500;
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            backdrop-filter: blur(16px);
+            padding: 16px 28px;
+            border-radius: 9999px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+            transition: opacity 0.8s, transform 0.8s;
+            animation: textPulse 2.5s ease-in-out infinite;
+            line-height: 1.5;
+        }
+
+        @keyframes textPulse {
+            0%, 100% { border-color: rgba(255, 255, 255, 0.16); }
+            50% { border-color: rgba(56, 189, 248, 0.5); }
+        }
+
+        .splash-overlay.fly-out {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        .splash-overlay.fly-out .splash-logo-container {
+            transform: scale(14) rotate(3deg);
+            opacity: 0;
+            filter: blur(12px) drop-shadow(0 0 50px rgba(56, 189, 248, 0.8));
+        }
+
+        .splash-overlay.fly-out .splash-info-text {
+            opacity: 0;
+            transform: translateY(20px) scale(0.9);
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 24px 16px;
+        }
+
+        .glass-card {
+            background: var(--glass-card-bg);
+            backdrop-filter: blur(16px) saturate(210%);
+            -webkit-backdrop-filter: blur(16px) saturate(210%);
+            border: 1px solid var(--glass-border);
+            border-top: 1px solid var(--glass-border-top);
+            border-radius: 26px;
+            padding: 32px;
+            margin-bottom: 28px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.15);
+            
+            opacity: 0;
+            transform: translateY(45px) scale(0.96);
+            filter: blur(6px);
+            transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), 
+                        transform 0.8s cubic-bezier(0.16, 1, 0.3, 1), 
+                        filter 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+            will-change: opacity, transform, filter;
+        }
+
+        .glass-card.in-view {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+            filter: blur(0);
+        }
+
+        .glass-card.killer-feature-card {
+            background: radial-gradient(circle at top right, rgba(56, 189, 248, 0.15), rgba(168, 85, 247, 0.08) 50%, rgba(6, 11, 25, 0.28) 100%);
+            border: 1px solid rgba(56, 189, 248, 0.4);
+            border-top: 1px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 0 25px 65px rgba(56, 189, 248, 0.18), inset 0 1px 2px rgba(255, 255, 255, 0.3);
+            position: relative;
+        }
+
+        .badge-killer-feature {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 16px;
+            border-radius: 9999px;
+            background: rgba(236, 72, 153, 0.15);
+            border: 1px solid rgba(236, 72, 153, 0.5);
+            color: #f472b6;
+            font-size: 0.8rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 16px;
+            box-shadow: 0 0 15px rgba(236, 72, 153, 0.25);
+        }
+
+        .thanks-card {
+            text-align: center;
+        }
+
+        .thanks-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 12px;
+            text-align: center;
+        }
+
+        .hero-card {
+            text-align: center;
+            padding: 56px 28px;
+        }
+
+        .badge-flagship {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 20px;
+            border-radius: 9999px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #ffffff;
+            font-size: 0.85rem;
+            font-weight: 700;
+            letter-spacing: 1.2px;
+            text-transform: uppercase;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .gradient-text, .animated-title {
+            background: linear-gradient(90deg, #ffffff, #38bdf8, #a855f7, #ec4899, #38bdf8, #ffffff);
+            background-size: 300% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: slowGradient 10s linear infinite;
+            display: inline-block;
+            font-weight: 800;
+        }
+
+        .animated-title {
+            font-size: 2.8rem;
+            line-height: 1.2;
+            margin-bottom: 20px;
+            display: block;
+        }
+
+        @keyframes slowGradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .hero-subtitle {
+            font-size: 1.15rem;
+            color: var(--text-muted);
+            max-width: 820px;
+            margin: 0 auto 32px auto;
+            text-align: left;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+            margin-top: 28px;
+        }
+
+        .metric-item {
+            background: rgba(0, 0, 0, 0.22);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-top: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 18px;
+            padding: 20px 16px;
+            text-align: center;
+        }
+
+        .metric-value {
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: var(--accent-cyan);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .metric-label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 22px;
+        }
+
+        .section-icon {
+            width: 52px;
+            height: 52px;
+            min-width: 52px;
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .animated-svg {
+            width: 28px;
+            height: 28px;
+            overflow: visible;
+        }
+
+        .icon-wifi .wave-1 { animation: wifiPulse 1.8s infinite 0.2s; }
+        .icon-wifi .wave-2 { animation: wifiPulse 1.8s infinite 0.4s; }
+        .icon-wifi .wave-3 { animation: wifiPulse 1.8s infinite 0.6s; }
+        @keyframes wifiPulse { 0%, 100% { opacity: 0.25; stroke: rgba(255, 255, 255, 0.3); } 50% { opacity: 1; stroke: #38bdf8; } }
+
+        .icon-ai .ai-core { animation: corePulse 2s ease-in-out infinite; }
+        .icon-ai .ai-orbit { transform-origin: 12px 12px; animation: orbitSpin 7s linear infinite; }
+        @keyframes corePulse { 0%, 100% { transform: scale(1); fill: #38bdf8; } 50% { transform: scale(1.3); fill: #a855f7; } }
+        @keyframes orbitSpin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .icon-crypto .chip-inner { animation: chipGlow 2s ease-in-out infinite; }
+        .icon-crypto .chip-pins { animation: pinsPulse 1.5s ease-in-out infinite alternate; }
+        @keyframes chipGlow { 0%, 100% { fill: #a855f7; } 50% { fill: #38bdf8; } }
+        @keyframes pinsPulse { 0% { opacity: 0.4; } 100% { opacity: 1; stroke: #a855f7; } }
+
+        .icon-repair .gear-spin { transform-origin: 12px 12px; animation: gearRotate 6s linear infinite; }
+        .icon-repair .wrench-swing { transform-origin: 8px 16px; animation: wrenchSwing 2.5s ease-in-out infinite; }
+        @keyframes gearRotate { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes wrenchSwing { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(-22deg); } }
+
+        .icon-shield .shield-body { animation: shieldPulse 2.2s ease-in-out infinite; }
+        .icon-shield .shield-check { animation: checkGlow 2.2s ease-in-out infinite; }
+        @keyframes shieldPulse { 0%, 100% { stroke: #38bdf8; filter: drop-shadow(0 0 0px transparent); } 50% { stroke: #a855f7; filter: drop-shadow(0 0 6px rgba(168, 85, 247, 0.6)); } }
+        @keyframes checkGlow { 0%, 100% { opacity: 0.6; } 50% { opacity: 1; stroke: #38bdf8; } }
+
+        .icon-media .media-play { transform-origin: 13px 12px; animation: playPulse 1.8s ease-in-out infinite; }
+        @keyframes playPulse { 0%, 100% { transform: scale(1); fill: #a855f7; } 50% { transform: scale(1.2); fill: #38bdf8; } }
+
+        .icon-autonomy .vault-ring { transform-origin: 12px 12px; animation: ringRotateReverse 8s linear infinite; }
+        .icon-autonomy .vault-key { animation: keyGlow 2.2s ease-in-out infinite; }
+        @keyframes ringRotateReverse { 0% { transform: rotate(360deg); } 100% { transform: rotate(0deg); } }
+        @keyframes keyGlow { 0%, 100% { stroke: #38bdf8; } 50% { stroke: #a855f7; filter: drop-shadow(0 0 5px rgba(168, 85, 247, 0.8)); } }
+
+        .icon-rocket { animation: rocketFloat 3s ease-in-out infinite; }
+        .icon-rocket .rocket-flame { animation: flameFlicker 0.35s ease-in-out infinite alternate; }
+        @keyframes rocketFloat { 0%, 100% { transform: translateY(0) translateX(0); } 50% { transform: translateY(-3px) translateX(2px); } }
+        @keyframes flameFlicker { 0% { opacity: 0.3; stroke: #a855f7; } 100% { opacity: 1; stroke: #ec4899; } }
+
+        .section-title { font-size: 1.45rem; font-weight: 700; color: #ffffff; }
+        .sub-heading { font-size: 1.15rem; font-weight: 700; color: var(--accent-cyan); margin: 20px 0 12px 0; }
+
+        ul.tech-list { list-style: none; display: flex; flex-direction: column; gap: 18px; }
+        ul.tech-list > li { position: relative; padding-left: 24px; }
+        ul.tech-list > li::before { content: "•"; position: absolute; left: 0; color: var(--accent-cyan); font-size: 1.4rem; line-height: 1; top: 2px; }
+
+        .sub-details { list-style: none; margin-top: 8px; padding-left: 12px; display: flex; flex-direction: column; gap: 6px; border-left: 2px solid rgba(255, 255, 255, 0.1); }
+        .sub-details li { font-size: 0.95rem; color: #d1d5db; }
+
+        .tooltip-trigger {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 21px;
+            height: 21px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(56, 189, 248, 0.5);
+            color: var(--accent-cyan);
+            cursor: pointer;
+            margin-left: 6px;
+            vertical-align: middle;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            padding: 0;
+            outline: none;
+        }
+
+        .tooltip-trigger svg {
+            width: 12px;
+            height: 12px;
+            stroke: var(--accent-cyan);
+            fill: none;
+            stroke-width: 2.2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            transition: stroke 0.2s;
+        }
+
+        .tooltip-trigger:hover {
+            background: var(--accent-cyan);
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 14px rgba(56, 189, 248, 0.7);
+            transform: scale(1.1);
+        }
+
+        .tooltip-trigger:hover svg { stroke: #030712; }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(12px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100000;
+            padding: 20px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .modal-overlay.active { opacity: 1; pointer-events: auto; }
+
+        .modal-card {
+            background: rgba(15, 23, 42, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 28px;
+            max-width: 600px;
+            width: 100%;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.7);
+            position: relative;
+            transform: scale(0.85) translateY(20px);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .modal-overlay.active .modal-card { transform: scale(1) translateY(0); }
+
+        .modal-close { position: absolute; top: 18px; right: 18px; background: none; border: none; color: var(--text-muted); font-size: 1.6rem; cursor: pointer; }
+        .modal-title { color: var(--accent-cyan); font-size: 1.2rem; font-weight: 700; margin-bottom: 12px; padding-right: 24px; }
+        .modal-text { font-size: 0.95rem; color: var(--text-main); line-height: 1.6; }
+
+        .table-hint-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; flex-wrap: wrap; gap: 10px; }
+        .scroll-indicator { display: inline-flex; align-items: center; gap: 6px; font-size: 0.82rem; color: var(--accent-cyan); background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.12); padding: 4px 12px; border-radius: 9999px; animation: pulseSwipe 2s infinite; }
+        @keyframes pulseSwipe { 0%, 100% { transform: translateX(0); opacity: 0.7; } 50% { transform: translateX(-6px); opacity: 1; } }
+
+        .table-container { overflow-x: auto; border-radius: 16px; border: 1px solid var(--glass-border); }
+        table.compare-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.92rem; min-width: 600px; }
+        table.compare-table th, table.compare-table td { padding: 14px 18px; border-bottom: 1px solid var(--glass-border); }
+        table.compare-table th { background: rgba(255, 255, 255, 0.04); color: var(--accent-cyan); font-weight: 700; }
+
+        .code-box-wrapper { margin-top: 14px; background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 16px; overflow: hidden; }
+        .code-box-header { display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; background: rgba(255, 255, 255, 0.03); border-bottom: 1px solid rgba(255, 255, 255, 0.08); font-size: 0.85rem; color: var(--text-muted); }
+        .copy-btn { display: inline-flex; align-items: center; gap: 6px; background: rgba(56, 189, 248, 0.15); border: 1px solid var(--accent-cyan); color: var(--accent-cyan); padding: 6px 14px; border-radius: 8px; font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .copy-btn:hover { background: var(--accent-cyan); color: #000; }
+        .copy-btn.copied { background: #10b981; border-color: #10b981; color: #fff; }
+        .code-box { padding: 16px; font-family: monospace; font-size: 0.9rem; color: #38bdf8; line-height: 1.5; word-break: break-word; }
+
+        .toast-notification {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--accent-cyan);
+            color: #ffffff;
+            padding: 16px 32px;
+            border-radius: 9999px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+            font-size: 1rem;
+            font-weight: 600;
+            z-index: 9999999;
+            opacity: 0;
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.4s;
+            pointer-events: none;
+            text-align: center;
+        }
+        .toast-notification.active {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        @media (max-width: 768px) {
+            .animated-title { font-size: 2rem; }
+            .container { padding: 12px; }
+            .glass-card { padding: 22px; }
+            .splash-logo-container { width: 180px; height: 180px; }
+            .splash-info-text { font-size: 1rem; padding: 14px 20px; border-radius: 20px; }
+        }
+    </style>
+</head>
+<body>
+
+    <button id="top-snooze-btn" title="Отложить на 1 час" style="
+        position: fixed;
+        top: max(16px, env(safe-area-inset-top, 16px));
+        right: 16px;
+        z-index: 999999;
+        background: rgba(15, 23, 42, 0.85);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(56, 189, 248, 0.4);
+        color: #f3f4f6;
+        padding: 10px 20px;
+        font-size: 0.9rem;
+        font-weight: 700;
+        border-radius: 9999px;
+        cursor: pointer;
+        box-shadow: 0 4px 25px rgba(0, 0, 0, 0.6);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: transform 0.2s, background-color 0.2s, box-shadow 0.2s;
+    ">
+        <span>Отложить на 1 час</span>
+        <span style="font-size: 1.2rem; line-height: 1; color: #38bdf8;">&times;</span>
+    </button>
+
+    <canvas id="space-canvas"></canvas>
+
+    <div class="splash-overlay" id="splash-overlay">
+        <div class="splash-content">
+            <div class="splash-logo-container" id="splash-logo">
+                <img src="logo.png" alt="SPACE Logo" class="splash-logo-img">
+            </div>
+            <div class="splash-info-text">
+                Данная страница перестанет появляться после изучения и принятия обновления
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+
+        <div class="glass-card thanks-card">
+            <h2 class="thanks-title">Спасибо сообществу за обратную связь!</h2>
+            <p>Система Space 1.0 заслужила репутацию невероятно надежной и стабильной рабочей платформы. Затем мы запустили закрытое Beta-тестирование версии <span class="gradient-text">Space 2.0</span> на отдельных моделях роутеров. Благодаря вашей обратной связи, тестам и предложениям, мы довели систему до совершенства.</p>
+
+            <p style="margin-top: 12px;"><b>Сегодня <span class="gradient-text">Space 2.0</span> официально выходит из Beta-статуса и становится нашей главной, флагманской операционной системой!</b> Все новшества, ранее доступные лишь участникам тестирования, теперь развернуты на вашем роутере в финальном, идеально отлаженном виде. Проект растет и развивается исключительно благодаря вашей поддержке и расширению нашей клиентской базы!</p>
+        </div>
+
+        <div class="glass-card" style="border: 1px solid rgba(168, 85, 247, 0.4); background: radial-gradient(circle at top left, rgba(168, 85, 247, 0.12), rgba(6, 11, 25, 0.3) 70%);">
+            <div class="section-header">
+                <div class="section-icon">
+                    <svg viewBox="0 0 24 24" class="animated-svg icon-shield">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" class="shield-body"/>
+                        <path d="M9 12l2 2 4-4" stroke="#a855f7" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class="shield-check"/>
+                    </svg>
+                </div>
+                <div class="section-title">Правовое уведомление: Локализация ИИ и 100% суверенная обработка данных</div>
+            </div>
+
+            <p style="margin-bottom: 14px;">Согласно нормам законодательства Российской Федерации (включая <b>Федеральный закон № 152-ФЗ «О персональных данных»</b>, <b>ФЗ № 149-ФЗ «Об информации, информационных технологиях и о защите информации»</b> и регламенты о суверенных локальных ИИ-контурах), любая обработка пользовательской информации, сетевых логов и алгоритмов искусственного интеллекта должна производиться исключительно на территории страны без передачи данных на внешние или зарубежные серверы.</p>
+
+            <p style="margin-bottom: 14px;">Именно поэтому архитектура <span class="gradient-text">Space 2.0</span> построена на базе строго изолированного локального контура:</p>
+
+            <ul class="tech-list">
+                <li><b>Локальный ИИ (AI Space Tuning) прямо в роутере:</b> Вся аналитика сети, алгоритмы распределения ресурсов и механизмы самообучения выполняются локально на аппаратном чипсете роутера. Никакие запросы, метаданные или история трафика не уходят в «облака» или к сторонним сервисам.</li>
+                <li><b>Исключение трансграничной передачи:</b> Все ваши персональные параметры, конфигурации сети и логи остаются зашифрованными исключительно во внутренней памяти устройства.</li>
+                <li><b>Необходимость подтверждения:</b> Из-за указанных требований законодательства и правил безопасности, использование обновленной операционной системы требует обязательного прочтения и явного принятия условий пользователем. Нажмите кнопку «Я принял и ознакомился» внизу страницы, чтобы зафиксировать согласие и разблокировать постоянный доступ.</li>
+            </ul>
+        </div>
+
+        <div class="glass-card hero-card">
+            <div class="badge-flagship">Официальный Флагманский Релиз!</div>
+            
+            <h1 class="animated-title">Ваш роутер стал в разы быстрее, сильнее и умнее</h1>
+            
+            <p class="hero-subtitle">Большинство современных роутеров имеют похожую аппаратную начинку. Но то, насколько быстро работает интернет в вашем доме, зависит не от корпуса или антенн, а от прошивки. В прошлых версиях огромная часть потенциала роутера оставалась заблокированной заводскими ограничениями.<br><br>Встречайте <span class="gradient-text">Space 2.0</span> - финальный флагманский релиз. Мы сняли все искусственные лимиты, перевели шифрование на физические микросхемы и активировали все спящие технологии чипсета.</p>
+
+            <div class="sub-heading" style="text-align: center;"><span class="gradient-text">Space 2.0</span> в цифрах по сравнению с базовой системой / Space 1.0:</div>
+
+            <div class="metrics-grid" id="metrics-grid">
+                <div class="metric-item">
+                    <div class="metric-value" data-target="150" data-prefix="+" data-suffix="%">0%</div>
+                    <div class="metric-label">Мощность и дальнобойность Wi-Fi (с 25 dBm до 29 dBm)</div>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-value" data-target="120" data-prefix="+" data-suffix="%">0%</div>
+                    <div class="metric-label">Площадь покрытия (без мертвых зон за стенами)</div>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-value" data-target="85" data-prefix="+" data-suffix="%">0%</div>
+                    <div class="metric-label">Скорость Wi-Fi в дальних комнатах</div>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-value" data-target="512" data-prefix="" data-suffix="">0</div>
+                    <div class="metric-label">Одновременно подключенных устройств (+100%)</div>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-value" data-target="70" data-prefix="+" data-suffix="%">0%</div>
+                    <div class="metric-label">Скорость отклика устройств Умного Дома</div>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-value" data-target="85" data-prefix="-" data-suffix="%">0%</div>
+                    <div class="metric-label">Нагрузка на ЦП при максимуме скачивания (всего 2–5%)</div>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-value" data-target="70" data-prefix="+" data-suffix="%">0%</div>
+                    <div class="metric-label">Стабильность пинга в играх (Bufferbloat)</div>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-value" data-target="60" data-prefix="+" data-suffix="%">0%</div>
+                    <div class="metric-label">Скорость старта загрузки сайтов и видео</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="glass-card">
+            <div class="section-header">
+                <div class="section-icon">
+                    <svg viewBox="0 0 24 24" class="animated-svg icon-wifi">
+                        <path d="M12 20h.01"/>
+                        <path d="M8.53 16.11a6 6 0 0 1 6.95 0" class="wave-1"/>
+                        <path d="M5 12.55a11 11 0 0 1 14.08 0" class="wave-2"/>
+                        <path d="M1.42 9a16 16 0 0 1 21.16 0" class="wave-3"/>
+                    </svg>
+                </div>
+                <div class="section-title">Аппаратный разгон Wi-Fi 6 (AX), Премиальный Беспроводной Эфир и Экосистема Будущего</div>
+            </div>
+
+            <div class="sub-heading">Сигнал через любые стены, поддержка 512 устройств и молниеносный AirPlay</div>
+            <p style="margin-bottom: 16px;">В базовом режиме мощность передатчика составляла 25 dBm (~316 мВт), а лимит подключений был ограничен 256 клиентами. В <span class="gradient-text">Space 2.0</span> мы полностью заменили базовые открытые драйверы и стандартное низкоуровневое ПО на специализированный микрокод, который задействует 100% возможностей аппаратной платформы. Физическая мощность передатчиков поднята до <b>29 dBm (800 мВт)</b>, а емкость сети расширена до <b>512 одновременных подключений</b> без просадок. Диапазон 2.4 ГГц переведен с устаревшего N-стандарта на высокоскоростной <b>AX (Wi-Fi 6)</b>.</p>
+
+            <div class="sub-heading">Полный разбор новых технологий Wi-Fi 6 и сетевого стека:</div>
+
+            <ul class="tech-list">
+                <li>
+                    <b>Премиальный AirPlay и трансляции (Multicast to Unicast)</b> 
+                    <button class="tooltip-trigger" data-title="Multicast to Unicast (m2u)" data-text="Технология беспроводных сетей, которая автоматически конвертирует радиопакеты массовой рассылки (multicast), передаваемые на базовой низкой скорости без подтверждения доставки, в персональные адресные пакеты (unicast). Это позволяет передавать данные на максимально доступной скорости Wi-Fi клиента с гарантированным подтверждением каждого пакета, полностью исключая задержки и потерю кадров в потоковом видео.">
+                        <svg viewBox="0 0 24 24"><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                    </button>
+                    <ul class="sub-details">
+                        <li><i>Было:</i> Роутер отправлял видеопотоки AirPlay, Chromecast и Smart TV через базовый вещательный режим, из-за чего картинка со смартфона на ТВ часто зависала или рассыпалась на пиксели.</li>
+                        <li><i>Стало в <span class="gradient-text">Space 2.0</span>:</i> Роутер на лету преобразует вещательный трафик в персональный высокоскоростной поток.</li>
+                        <li><i>Результат:</i> AirPlay, дублирование экрана и видеопотоки 4K транслируются мгновенно, без затыков и снижения качества.</li>
+                    </ul>
+                </li>
+
+                <li>
+                    <b>Защита от соседского Wi-Fi (BSS Coloring)</b> 
+                    <button class="tooltip-trigger" data-title="BSS Coloring (окрашивание базовых наборов служб)" data-text="Механизм пространственного соиспользования частот в Wi-Fi 6 (AX). Роутер добавляет цифровой идентификатор ('цвет') в заголовок каждого кадра и фильтрует чужие сигналы за стеной как фоновый шум вместо приостановки передачи данных.">
+                        <svg viewBox="0 0 24 24"><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                    </button>
+                    <ul class="sub-details">
+                        <li><i>Было:</i> Чужие Wi-Fi сети за стеной создавали сильные радиопомехи и тормозили скорость интернета.</li>
+                        <li><i>Стало в <span class="gradient-text">Space 2.0</span>:</i> Цифровая маркировка пакетов позволяет роутеру игнорировать чужие сигналы за стеной.</li>
+                        <li><i>Результат:</i> +80% защиты от соседских помех и уверенная скорость даже в плотной застройке.</li>
+                    </ul>
+                </li>
+
+                <li>
+                    <b>Защита Wi-Fi от помех Bluetooth и бытовых приборов (Coexistence Shield)</b> 
+                    <button class="tooltip-trigger" data-title="Bluetooth & Interference Isolation" data-text="Алгоритмы изоляции радиодиапазонов и адаптивной фильтрации внешних помех в диапазоне 2.4 ГГц (AX). Предотвращают взаимные наводки от Bluetooth-девайсов, бытовых приборов и сторонних глушилок.">
+                        <svg viewBox="0 0 24 24"><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                    </button>
+                    <ul class="sub-details">
+                        <li><i>Было:</i> Включение микроволновки или работа беспроводных наушников, мышек и геймпадов создавали сильные наводки, из-за чего Wi-Fi соединение теряло пакеты и зависало.</li>
+                        <li><i>Стало в <span class="gradient-text">Space 2.0</span>:</i> Переработана система взаимодействия каналов. Роутер изолирует шумы сторонних радиочастот, поддерживая работу Wi-Fi на максимальной скорости.</li>
+                        <li><i>Результат:</i> Wi-Fi соединение держится стабильно, пока вы пользуетесь Bluetooth-наушниками, играете с беспроводным геймпадом или разогреваете еду в микроволновке.</li>
+                    </ul>
+                </li>
+
+                <li>
+                    <b>Умный дом без мусора и пробок (Proxy ARP)</b> 
+                    <button class="tooltip-trigger" data-title="Proxy ARP (Proxy Address Resolution Protocol)" data-text="Режим работы роутера, при котором он перехватывает служебные ARP-запросы от устройств локальной сети и самостоятельно отвечает на них из своей таблицы IP/MAC адресов. Это предотвращает постоянный широковещательный 'спам' в радиоэфире, позволяя беспроводным устройствам (особенно умному дому) не просыпаться лишний раз для обработки чужих служебных пакетов.">
+                        <svg viewBox="0 0 24 24"><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                    </button>
+                    <ul class="sub-details">
+                        <li><i>Было:</i> При поиске гаджетов в сети устройства отправляли широковещательный запрос абсолютно всем клиентам, забивая эфир.</li>
+                        <li><i>Стало в <span class="gradient-text">Space 2.0</span>:</i> Роутер отвечает на запросы самостоятельно из своей памяти, избавляя эфир от лишнего радиошума.</li>
+                        <li><i>Результат:</i> +40% свободной ширины канала, умные розетки и датчики откликаются за доли секунды и не выпадают из сети.</li>
+                    </ul>
+                </li>
+
+                <li>
+                    <b>Энергосбережение и защита ресурса гаджетов (Target Wake Time)</b> 
+                    <button class="tooltip-trigger" data-title="Target Wake Time (TWT)" data-text="Ключевой стандарт энергосбережения в спецификации IEEE 802.11ax (Wi-Fi 6). Он позволяет роутеру и клиентскому устройству строго согласовать индивидуальное расписание (тайминги) выходов на связь. В промежутках между обменом данными Wi-Fi модуль смартфона переходит в спящий режим.">
+                        <svg viewBox="0 0 24 24"><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                    </button>
+                    <ul class="sub-details">
+                        <li><i>Было:</i> Модуль Wi-Fi в смартфонах и умных устройствах находился в постоянном активном ожидании, расходуя заряд аккумуляторов и ускоряя их износ.</li>
+                        <li><i>Стало в <span class="gradient-text">Space 2.0</span>:</i> Роутер и подключенные гаджеты договариваются о точном микро-расписании сессий связи, переводя Wi-Fi модуль в спящий режим в паузах.</li>
+                        <li><i>Результат:</i> Автономность смартфонов увеличивается до 35-40%, а аккумуляторы держат заряд существенно дольше. Умные устройства (датчики, розетки, термостаты) потребляют минимум электроэнергии, меньше греются, а срок их физической службы увеличивается в разы. Все пуш-уведомления при этом приходят мгновенно.</li>
+                    </ul>
+                </li>
+
+                <li>
+                    <b>Фокусировка радиолуча (Beamforming)</b> 
+                    <button class="tooltip-trigger" data-title="Beamforming (формирование диаграммы направленности)" data-text="Адаптивная технология Wi-Fi 6, использующая фазированную решетку антенн для расчета фазовых сдвигов сигнала. Роутер математически определяет точные координаты устройства в пространстве и фокусирует радиоволны в узконаправленный луч, повышая уровень сигнала (RSSI) и соотношение сигнал/шум (SNR) непосредственно на клиенте.">
+                        <svg viewBox="0 0 24 24"><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                    </button>
+                    <ul class="sub-details">
+                        <li><i>Было:</i> Сигнал излучался во все стороны одинаково, тратя до 70% энергии передатчика на пустые стены.</li>
+                        <li><i>Стало в <span class="gradient-text">Space 2.0</span>:</i> Роутер высчитывает точные координаты смартфона в пространстве и концентрирует радиоволны узким лучом.</li>
+                        <li><i>Результат:</i> +100% к силе и уровню сигнала непосредственно на вашем устройстве.</li>
+                    </ul>
+                </li>
+
+                <li>
+                    <b>Параллельная передача данных (OFDMA)</b> 
+                    <button class="tooltip-trigger" data-title="OFDMA (Orthogonal Frequency Division Multiple Access)" data-text="Технология ортогонального частотного разделения каналов с множественным доступом. Она делит стандартный Wi-Fi канал на множественные мелкие поднесущие частоты (Resource Units, RU). Это позволяет роутеру в рамках единого временного кадра одновременно передавать данные сразу нескольким разнородным устройствам, устраняя задержки ожиданий в очереди.">
+                        <svg viewBox="0 0 24 24"><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                    </button>
+                    <ul class="sub-details">
+                        <li><i>Было:</i> Устройства передавали и принимали данные строго по очереди, создавая микрозадержки при нескольких подключенных клиентах.</li>
+                        <li><i>Стало в <span class="gradient-text">Space 2.0</span>:</i> Канал делится на сотни мелких подканалов для одновременного обмена данными с десятками гаджетов за один такт.</li>
+                        <li><i>Результат:</i> +300% к емкости сети и отсутствие очереди ожидания при высокой нагрузке.</li>
+                    </ul>
+                </li>
+
+                <li>
+                    <b>Корпоративный быстрый роуминг без разрывов (802.11r/k/v)</b> 
+                    <button class="tooltip-trigger" data-title="802.11r/k/v - Быстрый роуминг" data-text="Комплекс протоколов корпоративного роуминга. 802.11k составляет карту соседних точек доступа, 802.11v управляет переходом клиента на оптимальный диапазон (BSS Transition), а 802.11r (Fast BSS Transition) заранее кэширует ключи шифрования на целевой частоте. Это сокращает время переподключения клиента с 500 миллисекунд до невидимых 10 миллисекунд.">
+                        <svg viewBox="0 0 24 24"><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                    </button>
+                    <ul class="sub-details">
+                        <li><i>Было:</i> При перемещении между комнатами или переключении диапазонов связь прерывалась на полсекунды.</li>
+                        <li><i>Стало в <span class="gradient-text">Space 2.0</span>:</i> Переход между 2.4 ГГц и 5 ГГц за счет кэширования ключей проходит всего за 10 миллисекунд.</li>
+                        <li><i>Результат:</i> Звонки в Telegram/Zoom и онлайн-игры не прерываются при передвижении по дому.</li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+
+        <div class="glass-card">
+            <div class="section-header">
+                <div class="section-icon">
+                    <svg viewBox="0 0 24 24" class="animated-svg icon-ai">
+                        <circle cx="12" cy="12" r="3.5" class="ai-core"/>
+                        <g class="ai-orbit">
+                            <ellipse cx="12" cy="12" rx="9" ry="3.5" stroke="#a855f7" stroke-width="1.8" fill="none" transform="rotate(30 12 12)"/>
+                            <ellipse cx="12" cy="12" rx="9" ry="3.5" stroke="#38bdf8" stroke-width="1.8" fill="none" transform="rotate(-30 12 12)"/>
+                        </g>
+                    </svg>
+                </div>
+                <div class="section-title">Искусственный Интеллект (AI Space Tuning)</div>
+            </div>
+
+            <div class="sub-heading">AI изучил ваше поведение за 7 дней и продолжает непрерывно улучшать вашу сеть</div>
+            <p style="margin-bottom: 16px;">В течение первых 7 дней тестирования внутри вашего роутера непрерывно работал алгоритм машинного обучения. Он незаметно анализировал сетевую активность вашего дома, создал индивидуальный профиль использования и на его основе сформировал стартовые настройки <span class="gradient-text">Space 2.0</span>.</p>
+
+            <div class="sub-heading">Обучение не останавливается - AI работает на вас каждый день:</div>
+            <p style="margin-bottom: 12px;">Искусственный интеллект не просто применил настройки один раз - <b>он продолжает непрерывно анализировать вашу сеть 24/7</b>:</p>
+
+            <ul class="tech-list">
+                <li><b>Балансировка провайдера и Wi-Fi:</b> AI высчитывает реальную скорость вашего провайдера и выстраивает оптимальный баланс между скоростью Wi-Fi, дальнобойностью и мощностью сигнала.</li>
+                <li><b>Отражение атак и защита файрволом:</b> При попытках взлома или DDoS-нагрузок AI мгновенно распознает аномалии, на лету перестраивает правила файрвола и нейтрализует угрозы.</li>
+                <li><b>Умные приоритеты категорий устройств:</b> Умным розеткам и датчикам выдается мгновенный отклик при минимальной полосе пропускания, а игровому ПК или приставке выделяется максимум скорости и минимальный пинг.</li>
+                <li><b>Сбережение ресурса роутера и всех подключенных устройств:</b> Интеллектуальное управление нагрузкой и циклами передач снижает энергопотребление системы. Это предотвращает перегрев компонентов и заметно продлевает срок службы как самого роутера, так и батарей всех подключенных телефонов, планшетов и гаджетов.</li>
+            </ul>
+        </div>
+
+        <div class="glass-card">
+            <div class="section-header">
+                <div class="section-icon">
+                    <svg viewBox="0 0 24 24" class="animated-svg icon-crypto">
+                        <rect x="6" y="6" width="12" height="12" rx="2.5" stroke="#38bdf8" stroke-width="2" fill="none"/>
+                        <rect x="9" y="9" width="6" height="6" rx="1" class="chip-inner"/>
+                        <path d="M3 9h3M3 15h3M18 9h3M18 15h3M9 3v3M15 3v3M9 18v3M15 18v3" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" class="chip-pins"/>
+                    </svg>
+                </div>
+                <div class="section-title">Аппаратное Крипто-Шифрование 2.0 и Чистая Скорость Железа</div>
+            </div>
+
+            <div class="sub-heading">Переход от программной нагрузки к чистой аппаратной скорости</div>
+            <ul class="tech-list">
+                <li><b>В чем была проблема раньше (Программное шифрование):</b> В прошлых версиях шифрование, защита и туннелирование трафика выполнялись программой прямо на центральном процессоре. При высоких нагрузках процессор раскалялся и загружался до 90%, из-за чего интернет начинал замирать, а скорость падала.</li>
+                <li>
+                    <b>Как стало в <span class="gradient-text">Space 2.0</span> (Аппаратное шифрование):</b> Программная перегрузка процессора полностью ликвидирована. Шифрование переведено на <b>аппаратный уровень</b> - зашифрованные данные обрабатывают специализированные крипто-сопроцессоры. Процессор роутера работает ровно и без тротлинга, а основной естественный нагрев при гигабитных прокачках приходится на Wi-Fi радиомодуль, который изначально спроектирован под такие нагрузки. 
+                    <button class="tooltip-trigger" data-title="Hardware Crypto Acceleration" data-text="Задействование специализированных аппаратно-вычислительных блоков (Crypto Engine), интегрированных в кристалл процессора роутера. Операции шифрования и расшифровки сетевых пакетов выполняются на физическом уровне микросхемы без привлечения универсальных ядер процессора, сохраняя 100% производительности ЦП для сетевых задач.">
+                        <svg viewBox="0 0 24 24"><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                    </button>
+                </li>
+            </ul>
+
+            <div class="sub-heading">Полная приватность от провайдера и посторонних:</div>
+            <ul class="tech-list">
+                <li><b>Сквозная Крипто-Маскировка 2.0:</b> Весь ваш трафик камуфлируется прямо на выходе из роутера. <b>Теперь только сайт и вы знают, какую страницу вы открыли</b>. Для вашего интернет-провайдера, операторов и посторонних лиц весь поток данных выглядит как абсолютно бессмысленный случайный радиошум.</li>
+                <li>
+                    <b>DNS-over-HTTPS без логов:</b> Запросы к адресам сайтов полностью зашифрованы и отправляются через самые быстрые мировые DNS-серверы, которые не ведут историю и логи ваших посещений. 
+                    <button class="tooltip-trigger" data-title="DNS-over-HTTPS (DoH)" data-text="Протокол выполнения DNS-запросов через зашифрованное HTTPS-соединение (порт 443). Он полностью скрывает доменные имена открываемых вами сайтов от интернет-провайдера и посторонних наблюдателей, предотвращая подмену DNS-ответов, провайдерские перехваты и ведение логов посещений.">
+                        <svg viewBox="0 0 24 24"><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                    </button>
+                </li>
+            </ul>
+
+            <div class="sub-heading">Движок максимальной производительности:</div>
+            <ul class="tech-list">
+                <li>
+                    <b>MediaTek Wireless Ethernet Dispatch:</b> Прямой аппаратный проброс данных между Wi-Fi и проводом без участия процессора (<b>разгрузка ЦП на 85%</b>). 
+                    <button class="tooltip-trigger" data-title="MediaTek WED (Wireless Ethernet Dispatch)" data-text="Проприетарная аппаратная архитектура прямой коммутации пакетов между беспроводными модулями Wi-Fi (MT7915/MT7981) и проводным Ethernet-коммутатором. Пакеты пробрасываются напрямую через аппаратный DMA-контроллер без обработки ядром Linux и центральным процессором.">
+                        <svg viewBox="0 0 24 24"><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                    </button>
+                </li>
+                <li>
+                    <b>Hardware Flow Offloading:</b> Аппаратное ускорение маршрутизации для гигабитных скоростей без нагрева. 
+                    <button class="tooltip-trigger" data-title="Hardware Flow Offloading (PPE / Packet Processing Engine)" data-text="Технология перенаправления установившихся сетевых потоков (IP-сессий) напрямую в аппаратный ускоритель маршрутизации роутера. После установки соединения подсистема nftables передает управление железу, благодаря чему гигабитный трафик коммутируется с нулевой загрузкой CPU.">
+                        <svg viewBox="0 0 24 24"><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                    </button>
+                </li>
+                <li>
+                    <b>Алгоритм Google TCP BBR:</b> Замена устаревших сетевых алгоритмов на разработку от Google. Сайты и видео стартуют на <b>60% быстрее</b>. 
+                    <button class="tooltip-trigger" data-title="TCP BBR (Bottleneck Bandwidth and RTT)" data-text="Алгоритм управления сетевым насыщением, разработанный Google. В отличие от классических алгоритмов (Cubic), ориентирующихся на факт потери пакетов, BBR строит модель канальной емкости на основе реальной скорости передачи и времени задержки (RTT). Это исключает накопление очереди в буферах и обеспечивает максимальную скорость даже при нестабильном Wi-Fi соединении.">
+                        <svg viewBox="0 0 24 24"><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                    </button>
+                </li>
+                <li>
+                    <b>Победа над Bufferbloat:</b> Строгий контроль задержек держит пинг в играх стабильным и низким, даже если в соседней комнате качают фильм. 
+                    <button class="tooltip-trigger" data-title="Bufferbloat (набухание буферов)" data-text="Феномен резкого возрастания задержки (пинга) из-за скопления избыточных пакетов в сетевых буферах при максимальной загрузке канала. Настройка tcp_notsent_lowat искусственно ограничивает объем отправляемых неподтвержденных данных в сокете до 16 КБ, гарантируя мгновенный отклик интерактивных приложений во время закачек.">
+                        <svg viewBox="0 0 24 24"><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                    </button>
+                </li>
+                <li>
+                    <b>Многопоточное распределение прерываний (irqbalance & Packet Steering):</b> Обработка сетевых пакетов равномерно распределяется по всем ядрам процессора (<b>+30% к общей производительности</b>). 
+                    <button class="tooltip-trigger" data-title="irqbalance & Packet Steering (RPS/RFS)" data-text="Механизмы параллельной обработки сетевых прерываний на многоядерных процессорах. Система автоматически и равномерно распределяет обработку поступающих пакетов от всех сетевых интерфейсов по всем доступным ядрам процессора, предотвращая перегрузку ядра #0.">
+                        <svg viewBox="0 0 24 24"><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                    </button>
+                </li>
+                <li>
+                    <b>Сжатие оперативной памяти ZRAM:</b> Динамическое сжатие данных в ОЗУ ускоряет отзывчивость всей системы на <b>50%</b>. 
+                    <button class="tooltip-trigger" data-title="ZRAM" data-text="Модуль ядра Linux, создающий сжатое виртуальное устройство в оперативной памяти. Используя алгоритм сверхбыстрого сжатия LZ4, роутер на лету сжимает данные в ОЗУ в пропорции ~2:1, фактически увеличивая объём доступной оперативной памяти без физической установки дополнительных чипов.">
+                        <svg viewBox="0 0 24 24"><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                    </button>
+                </li>
+            </ul>
+        </div>
+
+        <div class="glass-card">
+            <div class="section-header">
+                <div class="section-icon">
+                    <svg viewBox="0 0 24 24" class="animated-svg icon-repair">
+                        <path d="M12 15a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z" stroke="#a855f7" stroke-width="2" stroke-dasharray="2 2" class="gear-spin" fill="none"/>
+                        <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="wrench-swing" fill="none"/>
+                    </svg>
+                </div>
+                <div class="section-title">Автономный Авто-Ремонт, Пятничный Сервис и Неубиваемый VPN</div>
+            </div>
+
+            <div class="sub-heading">Роутер, который сам поддерживает себя в идеальном состоянии</div>
+            <p style="margin-bottom: 16px;">Забудьте о необходимости ходить к роутеру и выдергивать его из розетки. <span class="gradient-text">Space 2.0</span> - это полностью автономный комплекс.</p>
+
+            <ul class="tech-list">
+                <li><b>Ночной авто-ремонт в 3:58 утра:</b> Каждую ночь, пока вы спите, роутер проводит внутреннюю самодиагностику, очищает оперативную память, сбрасывает устаревшие сетевые таблицы и приводит все службы в идеальный порядок.</li>
+                <li><b>Еженедельный пятничный сервис:</b> По пятницам роутер проверяет наличие системных обновлений, патчей безопасности. Чтобы не переполнять память, он аккуратно приостанавливает фоновые сервисы, безопасно обновляет компоненты, обновляет интерфейс, модули защиты, ПО системы распределения трафика (напрямую и через VPN), очищает кэш и перезагружается.</li>
+                <li>
+                    <b>Двухуровневый Watchdog-контроллер:</b> Каждые 2 минуты система проверяет не просто наличие процесса защиты в памяти, а реальное прохождение пакетов. При любом сбое работа восстанавливается всего за 15 секунд. 
+                    <button class="tooltip-trigger" data-title="Watchdog Controller" data-text="Фоновый сервис системного мониторинга, который непрерывно проверяет валидность цепочек nftables и проводит контрольные сетевые транзакции. При фиксации сбоя или 'зависания' пакетов контроллер перезапускает стек без полной перезагрузки устройства.">
+                        <svg viewBox="0 0 24 24"><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                    </button>
+                </li>
+                <li><b>Умный авто-бенчмарк серверов (6 стран и 8 портов):</b> Если провайдер пытается заблокировать VPN-узел, роутер за секунды тестирует 6 гео-серверов по 8 различным портам, выбирает лучший узел с минимальным пингом и мгновенно переключается на него.</li>
+                <li><b>Изолированная проверка сервисов:</b> Роутер умеет незаметно тестировать доступность мессенджеров (например, Telegram) точечными запросами, не нарушая работу устройств в домашней сети.</li>
+            </ul>
+        </div>
+
+        <div class="glass-card">
+            <div class="section-header">
+                <div class="section-icon">
+                    <svg viewBox="0 0 24 24" class="animated-svg icon-shield">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" class="shield-body"/>
+                        <path d="M9 12l2 2 4-4" stroke="#a855f7" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class="shield-check"/>
+                    </svg>
+                </div>
+                <div class="section-title">Аппаратная Блокировка Рекламы, Фишинга и Трекеров</div>
+            </div>
+
+            <div class="sub-heading">Чистый и безопасный интернет без баннеров во всем доме</div>
+            <p style="margin-bottom: 16px;">Блокировка вредоносного контента в <span class="gradient-text">Space 2.0</span> переведена на сверхбыстрый бинарный формат <b>Fast Binary Rules (.srs)</b>.</p>
+
+            <ul class="tech-list">
+                <li><b>База из 1 000 000+ правил с ежедневным авто-обновлением:</b> В систему интегрированы самые актуальные базы: <b>AdAway</b>, <b>Hagezi-Ultimate</b>, <b>Scam-Blocklist</b>, <b>AdGuard DNS Filter</b> и анти-фишинговые списки. Более миллиона правил пополняются автоматически каждый день.</li>
+                <li>
+                    <b>Аппаратная обработка за доли миллисекунды:</b> Новые бинарные списки обрабатываются прямо в сетевом модуле роутера без задействования процессора и без задержек при открытии сайтов. 
+                    <button class="tooltip-trigger" data-title="Fast Binary Rules (.srs)" data-text="Оптимизированный бинарный формат хранения и сопоставления доменных имен, используемый подсистемой фильтрации. Вместо линейного поиска по миллионам текстовых строк роутер использует быстрое префиксное дерево (Trie), проверяя входящий DNS-запрос за единицы микросекунд с минимальным потреблением ОЗУ.">
+                        <svg viewBox="0 0 24 24"><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                    </button>
+                </li>
+                <li><b>Защита абсолютно всех устройств:</b> Рекламные баннеры, всплывающие окна, мошеннические (фишинговые) сайты и трекеры слежки блокируются еще до того, как они успеют загрузиться на ваш Smart TV, смартфон, планшет или ПК.</li>
+            </ul>
+        </div>
+
+        <div class="glass-card killer-feature-card">
+            <div class="badge-killer-feature">🔥 Главная киллер-фича сезона</div>
+
+            <div class="section-header">
+                <div class="section-icon">
+                    <svg viewBox="0 0 24 24" class="animated-svg icon-media">
+                        <rect x="2" y="4" width="20" height="16" rx="3" stroke="#38bdf8" stroke-width="2" fill="none"/>
+                        <polygon points="10 8 16 12 10 16 10 8" fill="#a855f7" class="media-play"/>
+                        <circle cx="6" cy="7" r="1" fill="#38bdf8"/>
+                        <circle cx="18" cy="7" r="1" fill="#38bdf8"/>
+                    </svg>
+                </div>
+                <div class="section-title">ФЛАГМАНСКАЯ НОВИНКА - TorrServer & Домашний Кинотеатр Lampa</div>
+            </div>
+
+            <div class="sub-heading">Забудьте о платных подписках и аренде серверов: 4K HDR торренты напрямую на ваш TV!</div>
+
+            <ul class="tech-list">
+                <li><b>Главный сбой старого подхода:</b> Раньше, чтобы посмотреть фильм в максимальном качестве 4K HDR, людям приходилось платить за кучу подписок в онлайн-кинотеатрах, покупать сторонние VDS-сервера, держать постоянно включенный мощный и шумящий ПК или же смириться со сжатым плохим качеством картинки на своих дорогих 4K-телевизорах.</li>
+                <li>
+                    <b>Флагманское решение в <span class="gradient-text">Space 2.0</span>:</b> Ваш роутер сам превращается в бесшумный и мощный медиасервер благодаря встроенному <b>TorrServer</b>. Он на лету транслирует тяжелые 4K HDR фильмы из торрент-сетей прямо на ваш TV, ПК или смартфон без предварительного скачивания на диск и без необходимости дергать компьютер! 
+                    <button class="tooltip-trigger" data-title="TorrServer" data-text="Специализированное серверное приложение, позволяющее последовательно кэшировать части торрент-файла в оперативную память и отдавать их клиенту в виде непрерывного HTTP-видеопотока. Это позволяет воспроизводить тяжелые 4K-фильмы из BitTorrent-сетей напрямую на телевизоре без диска и без использования ПК.">
+                        <svg viewBox="0 0 24 24"><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                    </button>
+                </li>
+                <li><b>Умная система защиты от зависаний:</b> В <span class="gradient-text">Space 2.0</span> задействована интеллектуальная защита оперативной памяти. Роутер автоматически оценивает объем ОЗУ и выделяет адаптивный кэш с жестким контролем ресурсов Go-окружения и высочайшим приоритетом защиты системы. Даже если вы запустите тяжелейший 4K Remux размером 80 ГБ, ваш роутер и интернет будут работать идеально гладко.</li>
+            </ul>
+
+            <div class="sub-heading">Как настроить кинотеатр Lampa за 1 минуту:</div>
+            <p>Для самого удобного выбора фильмов с афишами и описанием используйте бесплатное приложение <b>Lampa</b> на вашем Smart TV, Android TV, ПК или телефоне. 
+                <button class="tooltip-trigger" data-title="Lampa" data-text="Современный кроссплатформенный клиент-агрегатор для Smart TV и мобильных устройств, предоставляющий каталогизатор фильмов и сериалов с афишами, описанием и интерактивным выбором видеопотоков от локальных медиасерверов (TorrServer).">
+                    <svg viewBox="0 0 24 24"><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                </button>
+            </p>
+
+            <p style="margin-top: 14px;">Скопируйте готовый промт ниже и вставьте его в любой ИИ-чат или поисковик:</p>
+            
+            <div class="code-box-wrapper">
+                <div class="code-box-header">
+                    <span>Универсальный промт для скопирования:</span>
+                    <button class="copy-btn" id="copy-btn">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                        <span>Копировать</span>
+                    </button>
+                </div>
+                <div class="code-box" id="prompt-text">"Я хочу настроить домашний кинотеатр Lampa для просмотра фильмов через TorrServer, который запущен на моем роутере на порту 8090.
+
+Сначала задай мне 2 уточняющих вопроса:
+1. Какое у меня устройство для просмотра (Smart TV, Android TV, ПК, Apple TV, приставка)?
+2. Какой способ установки приложения мне удобнее (через флешку, прямая загрузка APK, через магазин приложений, App Store или терминал/ADB)?
+
+После моих ответов напиши подробную пошаговую инструкцию:
+- Как легко узнать точный IP-адрес моего роутера (например, 192.168.1.1, 192.168.21.1, 192.168.10.1) с телефона или компьютера.
+- Как установить Lampa именно выбранным мной способом.
+- Какие плагины добавить в настройках Lampa и где прописать адрес TorrServer (http://<IP_РОУТЕРА>:8090).
+- Как правильно выбрать и запустить 4K HDR фильм через торренты напрямую без скачивания на диск, чтобы всё работало без затыков."</div>
+            </div>
+        </div>
+
+        <div class="glass-card">
+            <div class="section-header">
+                <div class="section-icon">
+                    <svg viewBox="0 0 24 24" class="animated-svg icon-autonomy">
+                        <circle cx="12" cy="12" r="9" stroke="#38bdf8" stroke-width="1.8" fill="none" stroke-dasharray="3 3" class="vault-ring"/>
+                        <path d="M12 7v5l3 3" stroke="#a855f7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="vault-key"/>
+                        <circle cx="12" cy="12" r="2" fill="#38bdf8"/>
+                    </svg>
+                </div>
+                <div class="section-title">Безопасность 2.0, Конфиденциальность и 99% Автономия</div>
+            </div>
+
+            <div class="sub-heading">Полная независимость: AnyDesk больше не нужен!</div>
+
+            <ul class="tech-list">
+                <li><b>Забудьте про программы удаленного доступа (AnyDesk 99% больше не нужен):</b> В 99% случаев вам больше никогда не придется подключать специалистов через AnyDesk или TeamViewer для настройки роутера. Роутер полностью автономен, сам проводит диагностику, обновляет конфигурации и чинит себя при сбоях. AnyDesk остается лишь как резервный канал для 1% крайних экстренных ситуаций.</li>
+                <li><b>Удаленное обслуживание из приватного GitHub:</b> Все синхронизации параметров, обновленные списки защиты и улучшения приходят на роутер напрямую из вашего индивидуального приватного репозитория GitHub по секретному токену.</li>
+                <li><b>Гарантированная система откатов (Smoke Test):</b> При поступлении новых настроек роутер автоматически тестирует интернет-соединение и работу Wi-Fi. Если что-то идет не так, система за 5 секунд откатывается на проверенную резервную копию.</li>
+                <li>
+                    <b>Защита от взлома и перехвата пакетов (Защита 2.0):</b> Активированы продвинутые протоколы WPA3/SAE, защита от деаутентификации и изоляция служебных кадров. Злоумышленники не смогут перехватить ваши пароли или принудительно отключить ваши устройства от Wi-Fi. 
+                    <button class="tooltip-trigger" data-title="WPA3-SAE / PMF (Protected Management Frames)" data-text="Современный стандарт защиты беспроводных сетей. PMF шифрует служебные кадры управления Wi-Fi, полностью защищая клиенты от атак деаутентификации (Deauth attack), сброса соединений и перехвата хэндшейков злоумышленниками.">
+                        <svg viewBox="0 0 24 24"><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                    </button>
+                </li>
+                <li><b>100% Локальное хранение:</b> Все персональные данные, пароли от Wi-Fi, ключи шифрования и история подключений хранятся <b>строго на вашем роутере</b>. Никакая информация не отправляется на сторонние сервера.</li>
+            </ul>
+        </div>
+
+        <div class="glass-card">
+            <div class="section-header">
+                <div class="section-icon">
+                    <svg viewBox="0 0 24 24" class="animated-svg icon-rocket">
+                        <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z" stroke="#a855f7" stroke-width="2" fill="none"/>
+                        <path d="M12 15l-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-3.05 11a22.35 22.35 0 0 1-3.95 2z" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" class="rocket-body"/>
+                        <path d="M8 19l-4 4" stroke="#ec4899" stroke-width="2" stroke-linecap="round" class="rocket-flame"/>
+                    </svg>
+                </div>
+                <div class="section-title">Взгляд в будущее - Дальше только звезды, дальше только космос!</div>
+            </div>
+
+            <div class="sub-heading">Анонс будущих обновлений (Планы разработки Space 2.1, 2.2, 2.3 и далее)</div>
+            <p style="margin-bottom: 16px;">Выход версии 2.0 - это только начало нашего технологического рывка. Проект постоянно развивается, и мы уже готовим линейку крупных апдейтов в версиях <b>Space 2.1, 2.2, 2.3 и последующих релизах</b>, которые принесут технологии мирового уровня:</p>
+
+            <ul class="tech-list">
+                <li><b>VPN и Крипто-Шифрование Версии 3.0:</b> Разработка еще более стойких протоколов шифрования с нулевым следом в сети, которые абсолютно устойчивы к любым типам провайдерского DPI-анализа.</li>
+                <li><b>Фоновое обновление ОС без перерыва связи:</b> Внедрение системы фонового обновления базовой операционной системы (например, переход с OpenWrt 25.12.2 на 25.12.5). Роутер будет обновлять ядра и системные компоненты на лету - без разрыва соединений, без зависаний и без риска сброса ваших параметров.</li>
+                <li><b>Эволюция встроенного AI (Space Neural Engine):</b> Машинное обучение перейдет на нейросетевые алгоритмы с прогнозированием пиковых нагрузок и автоматической предзагрузкой маршрутов.</li>
+                <li><b>Мгновенная интеграция новых сетевых стандартов:</b> Все свежие технологии Wi-Fi и алгоритмы ускорения, которые будут появляться в мировой индустрии, будут внедряться в вашу прошивку первыми.</li>
+                <li>
+                    <b>Встроенный локальный хаб Умного Дома (Home Assistant или его локальный аналог):</b> Мы готовим интеграцию компактной локальной платформы Умного Дома прямо в роутер. Вы сможете объединить умные устройства от разных брендов (Xiaomi, Tuya, Yandex, Aqara, Apple HomeKit и др.) в <b>единую 100% локальную экосистему</b>, которая будет работать с молниеносной скоростью даже при полном отсутствии интернета! 
+                    <button class="tooltip-trigger" data-title="Home Assistant / Локальный Хаб" data-text="Ведущая в мире открытая платформа автоматизации умного дома (или ее оптимизированный встроенный аналог), объединяющий устройства сотен разных вендоров (Zigbee, Matter, Wi-Fi) в единый локальный хаб управления без зависимости от сторонних облачных серверов.">
+                        <svg viewBox="0 0 24 24"><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                    </button>
+                </li>
+            </ul>
+        </div>
+
+        <div class="glass-card">
+            <div class="table-hint-bar">
+                <div class="section-title">Сравнительная таблица: Space 1.0 vs <span class="gradient-text">Space 2.0</span> Флагман</div>
+                <div class="scroll-indicator">
+                    <span>← Листайте таблицу →</span>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table class="compare-table">
+                    <thead>
+                        <tr>
+                            <th>Параметр / Функция</th>
+                            <th>Space 1.0 (Базовая / Старая)</th>
+                            <th>Space 2.0 (Флагманский Релиз)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><b>Сила и дальнобойность Wi-Fi</b></td>
+                            <td>~25 dBm (Базовая)</td>
+                            <td><b>29 dBm (Разгон, +150% к мощности сигнала)</b></td>
+                        </tr>
+                        <tr>
+                            <td><b>Площадь покрытия сигнала</b></td>
+                            <td>Есть мертвые зоны</td>
+                            <td><b>+120% покрытия, уверенный сигнал через 2+ стены</b></td>
+                        </tr>
+                        <tr>
+                            <td><b>Емкость подключений Wi-Fi</b></td>
+                            <td>До 256 устройств</td>
+                            <td><b>Расширено до 512 одновременно подключенных устройств</b></td>
+                        </tr>
+                        <tr>
+                            <td><b>Отклик Умного Дома</b></td>
+                            <td>Задержки, выпадения из сети</td>
+                            <td><b>Мгновенный отклик (+70% скорость, технология Proxy ARP)</b></td>
+                        </tr>
+                        <tr>
+                            <td><b>Трансляции AirPlay / Chromecast</b></td>
+                            <td>Зависания, снижение качества</td>
+                            <td><b>Идеальный 4K поток без задержек (Multicast to Unicast)</b></td>
+                        </tr>
+                        <tr>
+                            <td><b>Загрузка процессора роутера</b></td>
+                            <td>До 80–90% при нагрузке</td>
+                            <td><b>Снижена до 2–5% (Аппаратный проброс данных)</b></td>
+                        </tr>
+                        <tr>
+                            <td><b>Шифрование трафика</b></td>
+                            <td>Программное (нагрев ЦП)</td>
+                            <td><b>Аппаратные крипто-сопроцессоры без нагрузки на ЦП</b></td>
+                        </tr>
+                        <tr>
+                            <td><b>Маскировка трафика</b></td>
+                            <td>Базовая</td>
+                            <td><b>Сквозная Крипто-маскировка 2.0 + DoH без логов</b></td>
+                        </tr>
+                        <tr>
+                            <td><b>Задержки в играх (Bufferbloat)</b></td>
+                            <td>Пинг растет при качании</td>
+                            <td><b>Снижение задержек на 70% (Алгоритм Google TCP BBR)</b></td>
+                        </tr>
+                        <tr>
+                            <td><b>Блокировка рекламы</b></td>
+                            <td>Простая текстовая</td>
+                            <td><b>1 000 000+ правил, ежедневное авто-обновление (.srs)</b></td>
+                        </tr>
+                        <tr>
+                            <td><b>Медиасервер (4K Торренты)</b></td>
+                            <td>Отсутствует</td>
+                            <td><b>Встроенный TorrServer + Интеграция с Lampa</b></td>
+                        </tr>
+                        <tr>
+                            <td><b>Подстройка под пользователя</b></td>
+                            <td>Ручная</td>
+                            <td><b>Непрерывный ИИ (AI Space Tuning 24/7)</b></td>
+                        </tr>
+                        <tr>
+                            <td><b>Авто-обслуживание</b></td>
+                            <td>Отсутствовало</td>
+                            <td><b>Ночной ремонт (03:58) + Пятничный сервис пакетов</b></td>
+                        </tr>
+                        <tr>
+                            <td><b>Удаленная поддержка</b></td>
+                            <td>Нужен был AnyDesk</td>
+                            <td><b>99% Автономия через приватный GitHub (Smoke Test)</b></td>
+                        </tr>
+                        <tr>
+                            <td><b>Защита сети и Роуминг</b></td>
+                            <td>Базовые</td>
+                            <td><b>WPA3 / PMF 2.0 + Быстрый Enterprise Роуминг (10 мс)</b></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="glass-card thanks-card" style="text-align: center; margin-top: 40px; border: 1px solid rgba(56, 189, 248, 0.4);">
+            <h3 style="color: #ffffff; margin-bottom: 12px; font-size: 1.3rem;">Подтверждение ознакомления</h3>
+            <p style="margin-bottom: 24px; color: var(--text-muted);">Нажмите кнопку ниже, чтобы подтвердить ознакомление. После этого блокировка снимется, откроется полный доступ в интернет, а страница больше не будет появляться.</p>
+            
+            <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+                <button id="accept-release-btn" style="
+                    background: linear-gradient(135deg, #38bdf8 0%, #a855f7 100%);
+                    color: #ffffff;
+                    border: none;
+                    padding: 16px 42px;
+                    font-size: 1.05rem;
+                    font-weight: 700;
+                    border-radius: 9999px;
+                    cursor: pointer;
+                    box-shadow: 0 10px 30px rgba(56, 189, 248, 0.35);
+                    transition: transform 0.2s, box-shadow 0.2s;
+                ">Я принял и ознакомился</button>
+
+                <button id="bottom-snooze-btn" style="
+                    background: rgba(255, 255, 255, 0.05);
+                    border: 1px solid rgba(255, 255, 255, 0.2);
+                    color: #d1d5db;
+                    padding: 16px 28px;
+                    font-size: 0.95rem;
+                    font-weight: 600;
+                    border-radius: 9999px;
+                    cursor: pointer;
+                ">Отложить на 1 час</button>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="modal-overlay" id="tooltip-modal">
+        <div class="modal-card">
+            <button class="modal-close" id="modal-close">&times;</button>
+            <div class="modal-title" id="modal-title">Заголовок</div>
+            <div class="modal-text" id="modal-text">Текст сноски...</div>
+        </div>
+    </div>
+
+    <div class="toast-notification" id="toast-notification"></div>
+
+    <script>
+        const splashOverlay = document.getElementById('splash-overlay');
+        const splashLogo = document.getElementById('splash-logo');
+        let mainPageInitialized = false;
+
+        function triggerSplashFlyOut() {
+            if (!splashOverlay.classList.contains('fly-out')) {
+                splashOverlay.classList.add('fly-out');
+                setTimeout(() => {
+                    initMainPageAnimations();
+                }, 800);
+            }
+        }
+
+        setTimeout(triggerSplashFlyOut, 3400);
+        if (splashLogo) {
+            splashLogo.addEventListener('click', triggerSplashFlyOut);
+        }
+
+        const canvas = document.getElementById('space-canvas');
+        const ctx = canvas.getContext('2d');
+
+        let stars = [];
+        let meteors = [];
+        const numStars = 220;
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        for (let i = 0; i < numStars; i++) {
+            stars.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                radius: Math.random() * 1.8 + 0.2,
+                vx: (Math.random() - 0.5) * 0.15,
+                vy: (Math.random() - 0.5) * 0.15,
+                alpha: Math.random(),
+                twinkleSpeed: Math.random() * 0.02 + 0.005,
+                twinkleDir: Math.random() > 0.5 ? 1 : -1
+            });
+        }
+
+        function spawnMeteor() {
+            if (Math.random() < 0.03 && meteors.length < 2) {
+                meteors.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * (canvas.height / 2),
+                    length: Math.random() * 80 + 40,
+                    speed: Math.random() * 8 + 6,
+                    angle: Math.PI / 4,
+                    alpha: 1
+                });
+            }
+        }
+
+        function drawSpace() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            const g1 = ctx.createRadialGradient(canvas.width * 0.2, canvas.height * 0.3, 100, canvas.width * 0.2, canvas.height * 0.3, 600);
+            g1.addColorStop(0, 'rgba(56, 189, 248, 0.08)');
+            g1.addColorStop(1, 'transparent');
+            ctx.fillStyle = g1;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            const g2 = ctx.createRadialGradient(canvas.width * 0.8, canvas.height * 0.7, 100, canvas.width * 0.8, canvas.height * 0.7, 700);
+            g2.addColorStop(0, 'rgba(168, 85, 247, 0.07)');
+            g2.addColorStop(1, 'transparent');
+            ctx.fillStyle = g2;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            for (let i = 0; i < numStars; i++) {
+                let s = stars[i];
+
+                s.alpha += s.twinkleSpeed * s.twinkleDir;
+                if (s.alpha >= 1) { s.alpha = 1; s.twinkleDir = -1; }
+                if (s.alpha <= 0.2) { s.alpha = 0.2; s.twinkleDir = 1; }
+
+                ctx.beginPath();
+                ctx.arc(s.x, s.y, s.radius, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(255, 255, 255, ${s.alpha})`;
+                ctx.fill();
+
+                s.x += s.vx;
+                s.y += s.vy;
+
+                if (s.x < 0) s.x = canvas.width;
+                if (s.x > canvas.width) s.x = 0;
+                if (s.y < 0) s.y = canvas.height;
+                if (s.y > canvas.height) s.y = 0;
+            }
+
+            spawnMeteor();
+            for (let i = meteors.length - 1; i >= 0; i--) {
+                let m = meteors[i];
+
+                let endX = m.x + Math.cos(m.angle) * m.length;
+                let endY = m.y + Math.sin(m.angle) * m.length;
+
+                let grad = ctx.createLinearGradient(m.x, m.y, endX, endY);
+                grad.addColorStop(0, `rgba(56, 189, 248, ${m.alpha})`);
+                grad.addColorStop(1, 'transparent');
+
+                ctx.beginPath();
+                ctx.moveTo(m.x, m.y);
+                ctx.lineTo(endX, endY);
+                ctx.strokeStyle = grad;
+                ctx.lineWidth = 1.5;
+                ctx.stroke();
+
+                m.x += Math.cos(m.angle) * m.speed;
+                m.y += Math.sin(m.angle) * m.speed;
+                m.alpha -= 0.015;
+
+                if (m.alpha <= 0 || m.x > canvas.width || m.y > canvas.height) {
+                    meteors.splice(i, 1);
+                }
+            }
+
+            requestAnimationFrame(drawSpace);
+        }
+
+        drawSpace();
+
+        function initMainPageAnimations() {
+            if (mainPageInitialized) return;
+            mainPageInitialized = true;
+
+            const cardObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('in-view');
+                    }
+                });
+            }, { root: null, threshold: 0.08 });
+
+            document.querySelectorAll('.glass-card').forEach(card => {
+                cardObserver.observe(card);
+            });
+
+            let animatedCounters = false;
+            const metricsGrid = document.getElementById('metrics-grid');
+
+            const metricsObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting && !animatedCounters) {
+                        animatedCounters = true;
+                        runSequentialCounters();
+                    }
+                });
+            }, { threshold: 0.2 });
+
+            if (metricsGrid) {
+                metricsObserver.observe(metricsGrid);
+            }
+        }
+
+        async function runSequentialCounters() {
+            const counters = document.querySelectorAll('.metric-value');
+            for (let counter of counters) {
+                await animateCounter(counter);
+            }
+        }
+
+        function animateCounter(counter) {
+            return new Promise((resolve) => {
+                const target = parseInt(counter.getAttribute('data-target'), 10);
+                const prefix = counter.getAttribute('data-prefix') || '';
+                const suffix = counter.getAttribute('data-suffix') || '';
+                let current = 0;
+                const steps = 25;
+                const stepVal = Math.max(1, Math.ceil(target / steps));
+
+                const timer = setInterval(() => {
+                    current += stepVal;
+                    if (current >= target) {
+                        current = target;
+                        counter.textContent = `${prefix}${current}${suffix}`;
+                        clearInterval(timer);
+                        resolve();
+                    } else {
+                        counter.textContent = `${prefix}${current}${suffix}`;
+                    }
+                }, 30);
+            });
+        }
+
+        const modal = document.getElementById('tooltip-modal');
+        const modalTitle = document.getElementById('modal-title');
+        const modalText = document.getElementById('modal-text');
+        const modalClose = document.getElementById('modal-close');
+
+        function openModal(title, text) {
+            modalTitle.textContent = title;
+            modalText.textContent = text;
+            modal.classList.add('active');
+        }
+
+        function closeModal() {
+            modal.classList.remove('active');
+        }
+
+        document.querySelectorAll('.tooltip-trigger').forEach(trigger => {
+            trigger.addEventListener('click', (e) => {
+                e.stopPropagation();
+                openModal(
+                    trigger.getAttribute('data-title'),
+                    trigger.getAttribute('data-text')
+                );
+            });
+        });
+
+        modalClose.addEventListener('click', closeModal);
+
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) closeModal();
+        });
+
+        const copyBtn = document.getElementById('copy-btn');
+        const promptText = document.getElementById('prompt-text');
+
+        if (copyBtn && promptText) {
+            copyBtn.addEventListener('click', () => {
+                const textToCopy = promptText.innerText.replace(/^"|"$/g, '').trim();
+                navigator.clipboard.writeText(textToCopy).then(() => {
+                    const btnSpan = copyBtn.querySelector('span');
+                    const originalText = btnSpan.textContent;
+                    btnSpan.textContent = 'Скопировано!';
+                    copyBtn.classList.add('copied');
+                    setTimeout(() => {
+                        btnSpan.textContent = originalText;
+                        copyBtn.classList.remove('copied');
+                    }, 2000);
+                });
+            });
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast-notification');
+            if (!toast) return;
+            toast.textContent = msg;
+            toast.classList.add('active');
+        }
+
+        function sendPortalAction(endpointUrl, successMsg) {
+            showToast(successMsg);
+            
+            fetch(endpointUrl, { method: 'GET', cache: 'no-cache' })
+                .then(response => {
+                    setTimeout(() => {
+                        window.location.href = 'http://connectivitycheck.gstatic.com/generate_204';
+                    }, 800);
+                })
+                .catch(err => {
+                    console.log("CGI Fetch fallback...", err);
+                    setTimeout(() => {
+                        window.location.href = 'http://1.1.1.1';
+                    }, 800);
+                });
+        }
+
+        const topSnoozeBtn = document.getElementById('top-snooze-btn');
+        const bottomSnoozeBtn = document.getElementById('bottom-snooze-btn');
+        const acceptReleaseBtn = document.getElementById('accept-release-btn');
+
+        if (topSnoozeBtn) {
+            topSnoozeBtn.addEventListener('click', () => {
+                sendPortalAction('/cgi-bin/snooze.sh', '⏰ Доступ отложен на 1 час. Интернет активирован!');
+            });
+        }
+
+        if (bottomSnoozeBtn) {
+            bottomSnoozeBtn.addEventListener('click', () => {
+                sendPortalAction('/cgi-bin/snooze.sh', '⏰ Доступ отложен на 1 час. Интернет активирован!');
+            });
+        }
+
+        if (acceptReleaseBtn) {
+            acceptReleaseBtn.addEventListener('click', () => {
+                sendPortalAction('/cgi-bin/accept.sh', '🎉 Обновление успешно принято! Доступ открыт навсегда.');
+            });
+        }
+    </script>
+</body>
+</html>
